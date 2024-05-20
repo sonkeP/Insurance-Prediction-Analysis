@@ -1,6 +1,6 @@
 ---
 title: "FinalProject"
-Name: "Preeti Sonke,Apurva Patil"\
+Name: "Preeti Sonke"\
 output: html_document
 ---
 
