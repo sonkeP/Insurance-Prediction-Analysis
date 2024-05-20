@@ -1,0 +1,284 @@
+---
+title: "FinalProject"
+Name: "Preeti Sonke,Apurva Patil"\
+output: html_document
+---
+
+```{r}
+# Import needed packages
+#library(tidyverse)
+library(ggplot2) 
+#library(tigerstats) 
+#library(reticulate)
+library(MASS)
+library(MLmetrics)
+library(dplyr)
+```
+## Part 1 : Data reading and Visualization
+
+```{r setup, include=FALSE}
+ins <- read.csv("C:\\Users\\sonke\\Documents\\Programing\\Final Project\\insurance.csv", header=TRUE, stringsAsFactors = FALSE) 
+```
+
+```{r}
+head(ins)
+```
+
+
+#To retrive the structure of the data
+```{r}
+str(ins)
+```
+# Number of observations (no of rows)
+
+```{r}
+nrow(ins)
+
+```
+> This dataset has 348 rows
+
+# number of attributes ( no of columns)
+
+```{r}
+ncol(ins)
+```
+>This dataset has 7 colums 
+
+
+```{r}
+dim(ins)
+```
+>dimesion of insurance dataset are 348 rows and 7 colums  
+
+#Displying summary of dataset
+```{r}
+summary(ins)
+```
+
+# Showing Missing values
+
+```{r}
+nullValues<-sum(is.na(ins))
+nullValues
+```
+# Finding duplicate values 
+```{r}
+sum(duplicated(ins))
+
+```
+
+>found 0 duplicate values 
+
+```{r}
+sapply(ins, class) 
+```
+> showing the datatype of each column variables .
+
+
+#displaying the structure of the smoker column from the ins dataframe, 
+```{r}
+str(ins$smoker)
+```
+
+
+## Part 2: Graphical Representation
+
+#Histogram distribution of insurance charges .
+
+```{r}
+hist(ins$charges, 
+     main = "Distribution of Insurance Charges", 
+     xlab = "Insurance Charges", 
+     ylab = "Frequency", 
+     col = "lightblue", 
+     border = "black") 
+
+```
+>There's a higher frequency of insurance charges in the lower range (up to approximately $10,000).
+The frequency decreases as the charge amount increases.
+There are fewer instances of very high insurance charges (beyond $30,000).
+The distribution appears right-skewed, indicating that higher insurance charges are less common.
+The majority of insurance charges fall within a modest range, suggesting most insurance costs are not extremely high.
+
+##Histogram of Insurance Charges with Q1 and Q3
+
+```{r}
+
+
+# To Calculate Q1 and Q3 for charges
+Q1 <- quantile(ins$charges, 0.25)
+Q3 <- quantile(ins$charges, 0.75)
+
+
+hist(ins$charges, 
+     main = "Histogram of Insurance Charges with Q1 and Q3", 
+     xlab = "Insurance Charges", 
+     ylab = "Frequency", 
+     col = "lightblue", 
+     border = "black")
+
+# Add vertical lines for Q1 and Q3
+abline(v = Q1, col = "black", lwd = 2, lty = 2)
+abline(v = Q3, col = "black", lwd = 2, lty = 2)
+
+
+
+```
+>The histogram for insurance charges with marked Q1 and Q3 indicates that the middle 50% of the data (the interquartile range) lies between these two quartiles. The Q1 marker shows where 25% of the charges fall below, and the Q3 marker shows where 25% of the charges fall above, 
+
+#Boxplot of Charges by Smoker Status
+```{r}
+# Assuming 'smoker' is a factor with two levels: 0 for non-smokers and 1 for smokers
+boxplot(charges ~ smoker, data = ins,
+        main = "Boxplot of Charges by Smoker Status",
+        col = c("lightblue", "lightgreen"))  
+```
+
+>The boxplot illustrates that insurance charges are significantly higher for smokers compared to non-smokers, with smokers showing a wider range and higher median of charges. Non-smokers have a tighter distribution of charges with a lower median and fewer outliers.
+
+
+
+#Overlay Histogram of Charges for Smokers vs. Non-Smokers
+
+```{r}
+library(ggplot2)
+ins$smoker <- as.factor(ins$smoker)
+
+
+ggplot(ins, aes(x = charges, fill = smoker)) +
+  geom_histogram(aes(y = ..density..), position = 'identity', alpha = 0.5, bins = 30) +
+  labs(title = 'Overlay Histogram of Charges for Smokers vs. Non-Smokers',
+       x = 'Charges',
+       y = 'Density') +
+  scale_fill_manual(values = c('blue', 'red'))
+
+
+```
+>The histogram overlays the density of insurance charges for smokers (red) and non-smokers (blue).
+Smokers tend to have higher insurance charges, as indicated by the red bars extending further along the x-axis.
+Both groups show a right-skewed distribution, with the majority of charges clustered at the lower end.
+
+
+
+## Part 3:Data Analysis 
+```{r}
+install.packages("Metrics")
+library(Metrics)
+```
+
+
+
+##Hypothesis testing
+
+```{r}
+t.test(charges ~ smoker, data=ins)
+```
+>Hypothesis testing results for charges by smoker status:
+Null Hypothesis: No difference in average charges between smokers and non-smokers
+Alternative Hypothesis: Average charges differ between smokers and non-smokers
+Test Used: Two sample t-test
+Results:
+t-statistic = -18.192, df = 94.439, extremely low p-value <0.0001
+Average charges significantly higher for smokers (mean=$32,313.946) vs non-smokers (mean=$8,465.493)
+95% CI excludes zero, indicating observed mean difference very unlikely to include true population difference of zero
+Conclusion:
+Very strong statistical evidence to reject the null hypothesis
+Compelling support that smoker status has highly significant impact on charges
+Alternative hypothesis supported - average charges differ significantly between smokers and non-smokers in the population
+
+```{r}
+t.test(charges ~ sex, data=ins)
+```
+> Hypothesis testing results for charges by sex:
+Null Hypothesis: No difference in average charges between males and females
+Alternative Hypothesis: Average charges differ between males and females
+Test Used: Two sample t-test
+Results:
+t-statistic = -1.841, df = 335.22, p-value = 0.0665
+Average charges higher for males (mean=$15,233.78) vs females (mean=$12,756.36)
+95% CI includes zero, ranging from -$5,124 to $170
+Conclusion:
+P-value above the typical 0.05 threshold, so the null hypothesis cannot be rejected
+Evidence is insufficient to determine a statistically significant difference in average charges by sex
+While point estimates suggest higher charges for males, difference could also be due to chance
+Alternative hypothesis of different average charges by sex is not strongly supported based on this sample data
+
+Linear Regression
+
+here we have take charges as response variable in linear regression as-----
+Assumptions:
+
+Null Hypothesis: There is no linear relationship between charges and the predictors age, sex, bmi, smoker, children, region
+Alternative Hypothesis: There is a linear relationship between charges and the predictors
+Performing F-test on the linear regression model to check whether group of predictor have impact on response variable or not.
+
+```{r}
+model <- lm(charges ~ age + sex + bmi + smoker + children + region, data = ins)
+summary(model)
+```
+>The p-value of the F-statistic is very small (< 2.2e-16),so we can reject the null hypothesis at any reasonable significance level concluding that there is a linear relationship between charges and the predictors
+
+
+
+Linear Regression with Subset Selection
+Here is the model with all possible predictors
+
+```{r}
+full_model <- lm(charges ~ ., data = ins)
+summary(full_model)
+```
+backward stepwise regression selection based on AIC
+
+```{r}
+back_final_model <- stepAIC(full_model, direction="backward")
+```
+```{r}
+forward_final_model <- stepAIC(full_model, direction="forward")
+```
+>The final model contains significant predictors:
+age, sex, bmi, smoker, children, region
+
+To assess we choose backward final model
+
+```{r}
+summary(back_final_model)
+```
+>The model fits the data well, explaining around 77% of the variance in charges based on the high R-squared value.
+The regression model captures most of the variation in charges using statistically significant predictor variables.
+It fits the data very well and outperforms a simple intercept model.
+Predictions have reasonably low error, suggesting the model predicts charges with acceptable accuracy.
+
+Predict in test dataset
+
+```{r}
+test <- ins[sample(nrow(ins), 0.25*nrow(ins)),]
+pred <- predict(back_final_model, newdata=test)
+MAE(y_pred = pred,y_true = test$charges)
+MSE(y_pred = pred,y_true = test$charges)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(back_ffinal_model)
+```
+
+```{r}
+init <- lm(charges~1, data=ins)
+full <- lm(charges ~ ., data=ins)
+
+
+forwardModel <- stepAIC(init, scope=formula(full), direction="forward")
+
+
+final_formula <- formula(forwardModel)
+
+test <- ins[sample(nrow(ins), 0.25),]
+pred <- predict(forwardModel, newdata=test)
+MAE(pred, test$charges)
+MSE(pred, test$charges)
+
+
+print(final_formula)
+
+```
+
